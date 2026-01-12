@@ -1,1 +1,9 @@
 rootProject.name = 'Arbor'
+
+include(
+        ":api",
+        ":core",
+        ":platform",
+        ":platform:bootstrap",
+        ":platform:platform-bukkit"
+)
