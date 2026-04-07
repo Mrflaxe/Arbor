@@ -14,23 +14,25 @@ public class TestCommand implements CommandDefinition<CommandSender> {
 
     @Override
     public String getName() {
-        return "test";
+        return "greet";
     }
 
-    public List<CommandSignature<CommandSender>> getSignatures() {
+    @Override
+    public List<CommandSignature<CommandSender>> getCommandSignatures() {
         return List.of(
-            Signature.of(
-                    List.of(new PlayerArgument()),
-                    ctx -> execute((CommandSender) ctx.source())
-            )
+                Signature.of(this::greetSelf),
+                Signature.of(PlayerArgument.INSTANCE, this::greetTarget)
         );
     }
 
-    public ExecutionResult execute(CommandSender sender) {
-
+    private ExecutionResult greetSelf(CommandSender sender) {
+        sender.sendMessage("Hello, " + sender.getName() + "!");
+        return new ExecutionResult(true, "greeted self");
     }
 
-    public void execute(CommandSender sender, Player player) {
-
+    private ExecutionResult greetTarget(CommandSender sender, Player target) {
+        sender.sendMessage("Hello, " + target.getName() + "!");
+        target.sendMessage(sender.getName() + " says hello to you!");
+        return new ExecutionResult(true, "greeted target");
     }
 }

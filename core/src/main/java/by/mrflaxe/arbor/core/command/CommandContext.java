@@ -1,19 +1,20 @@
 package by.mrflaxe.arbor.core.command;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import by.mrflaxe.arbor.core.command.argument.ArgumentDefinition;
 
-@Getter
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequiredArgsConstructor
 public class CommandContext<S> {
 
-    S source;
+    private final com.mojang.brigadier.context.CommandContext<S> brigCtx;
 
+    public CommandContext(com.mojang.brigadier.context.CommandContext<S> brigCtx) {
+        this.brigCtx = brigCtx;
+    }
 
-    public <T> T getArgumentValue(String argumentName) {
+    public S getSource() {
+        return brigCtx.getSource();
+    }
 
+    public <T> T get(ArgumentDefinition<S, T> arg) {
+        return brigCtx.getArgument(arg.getName(), arg.getValueType());
     }
 }

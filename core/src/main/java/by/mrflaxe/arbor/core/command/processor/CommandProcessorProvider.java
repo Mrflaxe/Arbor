@@ -9,8 +9,4 @@ public class CommandProcessorProvider {
     public static CommandProcessorProvider getInstance() {
         return new CommandProcessorProvider();
     }
-
-    public<S> CommandProcessor<S> getCommandProcessor() {
-        return new BrigadierCommandProcessor<>();
-    }
 }

@@ -6,7 +6,9 @@ public interface ArgumentDefinition<S, T> {
 
     String getName();
 
-    Class<T> getType();
+    Class<T> getValueType();
+
+    T parse(String input) throws ArgumentParseException;
 
     List<String> suggest(S source, String input);
 }

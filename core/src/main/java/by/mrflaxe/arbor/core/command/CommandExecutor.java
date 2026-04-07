@@ -1,7 +1,7 @@
 package by.mrflaxe.arbor.core.command;
 
 @FunctionalInterface
-public interface CommandExecutor {
+public interface CommandExecutor<S> {
 
-    ExecutionResult execute(CommandContext ctx);
+    ExecutionResult execute(CommandContext<S> ctx);
 }

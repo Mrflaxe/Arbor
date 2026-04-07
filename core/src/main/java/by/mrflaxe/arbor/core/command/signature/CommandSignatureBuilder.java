@@ -8,20 +8,20 @@ import java.util.List;
 
 public class CommandSignatureBuilder<S> {
 
-    private final List<ArgumentDefinition> argumentDefinitions = new LinkedList<>();
-    private CommandExecutor commandExecutor;
+    private final List<ArgumentDefinition<S, ?>> argumentDefinitions = new LinkedList<>();
+    private CommandExecutor<S> commandExecutor;
 
-    public CommandSignatureBuilder<S> arg(ArgumentDefinition argumentDefinition) {
+    public <T> CommandSignatureBuilder<S> arg(ArgumentDefinition<S, T> argumentDefinition) {
         argumentDefinitions.add(argumentDefinition);
         return this;
     }
 
-    public CommandSignatureBuilder<S> executes(CommandExecutor commandExecutor) {
-        this.commandExecutor = commandExecutor;
+    public CommandSignatureBuilder<S> executes(CommandExecutor<S> executor) {
+        this.commandExecutor = executor;
         return this;
     }
 
     public CommandSignature<S> build() {
-
+        return new CommandSignature<>(List.copyOf(argumentDefinitions), commandExecutor);
     }
 }

@@ -16,7 +16,7 @@ import java.util.List;
 public class CommandSignature<S> {
 
     Collection<ArgumentDefinition<S, ?>> arguments;
-    CommandExecutor executor;
+    CommandExecutor<S> executor;
 
     public Collection<ArgumentDefinition<S, ?>> getArguments() {
         return List.copyOf(arguments);
