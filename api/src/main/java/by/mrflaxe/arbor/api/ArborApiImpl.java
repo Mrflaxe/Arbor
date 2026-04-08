@@ -1,18 +1,28 @@
 package by.mrflaxe.arbor.api;
 
-import by.mrflaxe.arbor.core.CommandDefinition;
+import by.mrflaxe.arbor.core.Definition;
 import by.mrflaxe.arbor.core.DefinitionRegistry;
+import by.mrflaxe.arbor.core.Platform;
 
-public class ArborApiImpl implements ArborAPI {
+class ArborApiImpl implements ArborAPI {
 
-    private final DefinitionRegistry registry;
+    private final DefinitionRegistry registry = new DefinitionRegistry();
+    private final Platform platform;
+    private final Object platformContext;
 
-    public ArborApiImpl() {
-        this.registry = new DefinitionRegistry();
+    ArborApiImpl(Platform platform, Object platformContext) {
+        this.platform = platform;
+        this.platformContext = platformContext;
     }
 
-    public boolean registerCommandDefinition(CommandDefinition commandDefinition) {
-        registry.add(commandDefinition);
-        return true;
+    @Override
+    public ArborAPI register(Definition definition) {
+        registry.add(definition);
+        return this;
+    }
+
+    @Override
+    public void start() {
+        platform.initialize(platformContext, registry);
     }
 }
