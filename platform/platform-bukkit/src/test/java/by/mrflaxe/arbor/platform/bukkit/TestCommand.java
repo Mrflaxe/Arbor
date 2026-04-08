@@ -27,12 +27,12 @@ public class TestCommand implements CommandDefinition<CommandSender> {
 
     private ExecutionResult greetSelf(CommandSender sender) {
         sender.sendMessage("Hello, " + sender.getName() + "!");
-        return new ExecutionResult(true, "greeted self");
+        return ExecutionResult.success();
     }
 
     private ExecutionResult greetTarget(CommandSender sender, Player target) {
         sender.sendMessage("Hello, " + target.getName() + "!");
         target.sendMessage(sender.getName() + " says hello to you!");
-        return new ExecutionResult(true, "greeted target");
+        return ExecutionResult.success();
     }
 }

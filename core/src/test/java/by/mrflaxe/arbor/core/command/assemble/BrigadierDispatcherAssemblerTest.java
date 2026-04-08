@@ -147,7 +147,7 @@ class BrigadierDispatcherAssemblerTest {
 
             @Override
             public List<CommandSignature<String>> getCommandSignatures() {
-                return List.of(Signature.of(source -> new ExecutionResult(true, "ok")));
+                return List.of(Signature.of(source -> ExecutionResult.success()));
             }
         };
     }
@@ -160,7 +160,7 @@ class BrigadierDispatcherAssemblerTest {
             public List<CommandSignature<String>> getCommandSignatures() {
                 return List.of(
                         Signature.of(IntegerArgument.INSTANCE,
-                                (source, number) -> new ExecutionResult(true, "rolled " + number))
+                                (source, number) -> ExecutionResult.success())
                 );
             }
         };
@@ -173,7 +173,7 @@ class BrigadierDispatcherAssemblerTest {
 
             @Override
             public List<CommandSignature<String>> getCommandSignatures() {
-                return List.of(Signature.of(source -> new ExecutionResult(true, "ok")));
+                return List.of(Signature.of(source -> ExecutionResult.success()));
             }
         };
     }
@@ -182,13 +182,13 @@ class BrigadierDispatcherAssemblerTest {
         List<CommandSignature<String>> signatures = new java.util.ArrayList<>();
         for (List<ArgumentDefinition<String, ?>> args : argLists) {
             if (args.isEmpty()) {
-                signatures.add(Signature.of(source -> new ExecutionResult(true, "ok")));
+                signatures.add(Signature.of(source -> ExecutionResult.success()));
             } else if (args.size() == 1) {
-                signatures.add(Signature.of(args.get(0), (source, val) -> new ExecutionResult(true, "ok")));
+                signatures.add(Signature.of(args.get(0), (source, val) -> ExecutionResult.success()));
             } else {
                 CommandSignatureBuilder<String> builder = Signature.<String>builder();
                 for (ArgumentDefinition<String, ?> arg : args) builder.arg(arg);
-                signatures.add(builder.executes(ctx -> new ExecutionResult(true, "ok")).build());
+                signatures.add(builder.executes(ctx -> ExecutionResult.success()).build());
             }
         }
         List<CommandSignature<String>> finalSignatures = signatures;

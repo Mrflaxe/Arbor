@@ -1,0 +1,2 @@
+core:
+  command-error: "Error: {detail}\nUsage: {usage}"

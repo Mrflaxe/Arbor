@@ -4,11 +4,13 @@ import by.mrflaxe.arbor.core.CommandDefinition;
 import by.mrflaxe.arbor.core.DefinitionRegistry;
 import by.mrflaxe.arbor.core.NamespaceDefinition;
 import by.mrflaxe.arbor.core.command.CommandContext;
+import by.mrflaxe.arbor.core.command.ExecutionResult;
 import by.mrflaxe.arbor.core.command.argument.ArgumentDefinition;
 import by.mrflaxe.arbor.core.command.argument.ArgumentParseException;
 import by.mrflaxe.arbor.core.command.processor.BrigadierCommandProcessor;
 import by.mrflaxe.arbor.core.command.processor.CommandProcessor;
 import by.mrflaxe.arbor.core.command.signature.CommandSignature;
+import by.mrflaxe.arbor.core.error.ErrorHandler;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -30,7 +32,22 @@ import java.util.stream.Collectors;
 
 public class BrigadierDispatcherAssembler<S> {
 
+    private ErrorHandler<S> errorHandler;
+    private final Map<String, String> usageMap = new LinkedHashMap<>();
+
     public CommandProcessor<S> assemble(DefinitionRegistry registry) {
+        return assembleInternal(registry);
+    }
+
+    public CommandProcessor<S> assemble(DefinitionRegistry registry, ErrorHandler<S> errorHandler) {
+        this.errorHandler = errorHandler;
+        CommandProcessor<S> processor = assembleInternal(registry);
+        this.errorHandler = null;
+        return processor;
+    }
+
+    private CommandProcessor<S> assembleInternal(DefinitionRegistry registry) {
+        usageMap.clear();
         CommandDispatcher<S> dispatcher = new CommandDispatcher<>();
         Map<String, LiteralArgumentBuilder<S>> builders = new HashMap<>();
 
@@ -39,7 +56,7 @@ public class BrigadierDispatcherAssembler<S> {
         attachChildrenToParents(builders, registry);
         registerRootCommands(builders, registry, dispatcher);
 
-        return new BrigadierCommandProcessor<>(dispatcher);
+        return new BrigadierCommandProcessor<>(dispatcher, errorHandler, Map.copyOf(usageMap));
     }
 
     private void addNamespaces(Map<String, LiteralArgumentBuilder<S>> builders, DefinitionRegistry registry) {
@@ -56,12 +73,26 @@ public class BrigadierDispatcherAssembler<S> {
 
             LiteralArgumentBuilder<S> builder = LiteralArgumentBuilder.literal(cmd.getName());
 
+            String usage = buildUsageString(cmd.getName(), cmd.getCommandSignatures());
+            usageMap.put(cmd.getName(), usage);
+
             for (CommandSignature<S> signature : cmd.getCommandSignatures()) {
-                attachSignature(builder, signature);
+                attachSignature(builder, signature, usage);
             }
 
             builders.put(cmd.getName(), builder);
         });
+    }
+
+    private String buildUsageString(String name, List<CommandSignature<S>> signatures) {
+        return signatures.stream()
+                .map(sig -> {
+                    String args = sig.getArguments().stream()
+                            .map(a -> "<" + a.getName() + ">")
+                            .collect(Collectors.joining(" "));
+                    return args.isEmpty() ? "/" + name : "/" + name + " " + args;
+                })
+                .collect(Collectors.joining("\n"));
     }
 
     private void validateSignatures(String commandName, List<CommandSignature<S>> signatures) {
@@ -125,11 +156,11 @@ public class BrigadierDispatcherAssembler<S> {
         return path.stream().map(ArgumentDefinition::getName).collect(Collectors.joining(", "));
     }
 
-    private void attachSignature(LiteralArgumentBuilder<S> builder, CommandSignature<S> signature) {
+    private void attachSignature(LiteralArgumentBuilder<S> builder, CommandSignature<S> signature, String usage) {
         List<ArgumentDefinition<S, ?>> args = new ArrayList<>(signature.getArguments());
 
         if (args.isEmpty()) {
-            builder.executes(brigCtx -> executeSignature(brigCtx, signature));
+            builder.executes(brigCtx -> executeSignature(brigCtx, signature, usage));
             return;
         }
 
@@ -138,7 +169,7 @@ public class BrigadierDispatcherAssembler<S> {
                 .collect(Collectors.toList());
 
         argBuilders.get(argBuilders.size() - 1)
-                .executes(brigCtx -> executeSignature(brigCtx, signature));
+                .executes(brigCtx -> executeSignature(brigCtx, signature, usage));
 
         for (int i = argBuilders.size() - 1; i > 0; i--) {
             argBuilders.get(i - 1).then(argBuilders.get(i));
@@ -147,9 +178,17 @@ public class BrigadierDispatcherAssembler<S> {
         builder.then(argBuilders.get(0));
     }
 
-    private int executeSignature(com.mojang.brigadier.context.CommandContext<S> brigCtx, CommandSignature<S> signature) {
+    private int executeSignature(
+            com.mojang.brigadier.context.CommandContext<S> brigCtx,
+            CommandSignature<S> signature,
+            String usage
+    ) {
         CommandContext<S> ctx = new CommandContext<>(brigCtx);
-        return signature.execute(ctx).isSuccess() ? 1 : 0;
+        ExecutionResult result = signature.execute(ctx);
+        if (!result.isSuccess() && errorHandler != null) {
+            errorHandler.onExecutionFailure(brigCtx.getSource(), result);
+        }
+        return result.isSuccess() ? 1 : 0;
     }
 
     @SuppressWarnings("unchecked")
