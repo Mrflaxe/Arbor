@@ -121,29 +121,7 @@ Arbor.create(this)           // "this" = JavaPlugin
 
 If no platform module is on the classpath that understands the given context type, `create()` throws `IllegalStateException` with a descriptive message.
 
-### `ArborAPI`
-
-```java
-public interface ArborAPI {
-    ArborAPI register(Definition definition);  // fluent — returns this
-    void start();
-}
-```
-
 `register()` accepts any `Definition` — `CommandDefinition`, `NamespaceDefinition`, or any custom implementation. `start()` triggers assembly and hands the result to the detected platform.
-
-### `Platform`
-
-The interface every platform module implements. Not part of the public user API — consumers interact with `Arbor` and `ArborAPI` only.
-
-```java
-public interface Platform {
-    boolean supports(Class<?> contextType);
-    void initialize(Object context, DefinitionRegistry registry);
-}
-```
-
-Platform implementations are discovered via `ServiceLoader`. A platform JAR registers itself by placing its fully-qualified class name in `META-INF/services/by.mrflaxe.arbor.core.Platform`.
 
 ---
 
@@ -313,18 +291,8 @@ The assembler validates all signatures before building. It throws:
 
 ---
 
-### `CommandProcessor<S>`
 
-The output of assembly. A simple two-method interface:
-
-```java
-ExecutionResult processCommand(String input, S source);
-List<String> processSuggestions(String input, S source);
-```
-
----
-
-## Error Handling
+## Error Handling (still in work)
 
 Without an `ErrorHandler`, parse errors silently return `ExecutionResult.failure("command-error")` and execution failures are ignored. Add an `ErrorHandler` to display messages to the sender.
 
@@ -426,14 +394,3 @@ List.of(
         .build()
 )
 ```
-
----
-
-## Dependencies
-
-| Dependency | Scope | Purpose |
-|---|---|---|
-| `com.mojang:brigadier:1.0.18` | `api` (core) | Command parsing and dispatch |
-| `org.projectlombok:lombok:1.18.42` | `compileOnly` (all) | `@FieldDefaults`, `@RequiredArgsConstructor` |
-| `org.jetbrains:annotations:26.0.2-1` | `compileOnly` (all) | `@Nullable`, `@Unmodifiable` |
-| `org.spigotmc:spigot-api:1.20.2-R0.1-SNAPSHOT` | `compileOnly` (bukkit) | Bukkit types |
